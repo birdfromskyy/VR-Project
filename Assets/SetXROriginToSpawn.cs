@@ -5,6 +5,7 @@ using Unity.XR.CoreUtils;
 public class SetXROriginToSpawn : MonoBehaviour
 {
     [SerializeField] private Transform spawnPoint;
+
     private XROrigin xrOrigin;
 
     private void Awake()
@@ -14,21 +15,17 @@ public class SetXROriginToSpawn : MonoBehaviour
 
     private IEnumerator Start()
     {
-        if (xrOrigin == null || spawnPoint == null)
-        {
-            Debug.LogError("SetXROriginToSpawn: не назначен XROrigin или SpawnPoint");
-            yield break;
-        }
-
-        // Ждём 1 кадр, чтобы трекинг камеры успел выставить локальную позицию HMD
+        // РїРѕРґРѕР¶РґС‘Рј РЅРµРјРЅРѕРіРѕ, С‡С‚РѕР±С‹ XR СѓСЃРїРµР» РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊСЃСЏ
         yield return null;
 
-        // 1) Ставим КАМЕРУ в точку спавна (компенсируя физический оффсет игрока)
-        xrOrigin.MoveCameraToWorldLocation(spawnPoint.position);
+        if (xrOrigin == null || spawnPoint == null) yield break;
 
-        // 2) Поворачиваем риг по Y, чтобы смотреть туда же
-        Vector3 e = transform.eulerAngles;
+        // 1) РЎС‚Р°РІРёРј СЂРёРі РЅР° С‚РѕС‡РєСѓ РїРѕР»Р°
+        xrOrigin.transform.position = spawnPoint.position;
+
+        // 2) РџРѕРІРѕСЂР°С‡РёРІР°РµРј С‚РѕР»СЊРєРѕ РїРѕ Y (С‡С‚РѕР±С‹ СЃРјРѕС‚СЂРµС‚СЊ С‚СѓРґР° Р¶Рµ)
+        var e = xrOrigin.transform.eulerAngles;
         e.y = spawnPoint.eulerAngles.y;
-        transform.eulerAngles = e;
+        xrOrigin.transform.eulerAngles = e;
     }
 }

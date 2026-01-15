@@ -13,28 +13,28 @@ public class ShiftIntroScreen : MonoBehaviour
     [SerializeField] private float fadeDuration = 0.5f;
     [SerializeField] private float visibleDuration = 2f;
 
-
     string GetClientWord(int n)
     {
         int lastTwo = n % 100;
         int last = n % 10;
 
+        // 11â€“14 ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²
         if (lastTwo >= 11 && lastTwo <= 14)
-            return "êëèåíòîâ";
+            return "ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²";
 
         if (last == 1)
-            return "êëèåíò";
+            return "ÐºÐ»Ð¸ÐµÐ½Ñ‚";
 
         if (last >= 2 && last <= 4)
-            return "êëèåíòà";
+            return "ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°";
 
-        return "êëèåíòîâ";
+        return "ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð¾Ð²";
     }
 
     public IEnumerator Play(int day, int targetClients)
     {
-        titleText.text = $"Äåíü {day}";
-        goalText.text = $"Öåëü: {targetClients} {GetClientWord(targetClients)}";
+        titleText.text = $"Ð”ÐµÐ½ÑŒ {day}";
+        goalText.text = $"Ð¦ÐµÐ»ÑŒ: {targetClients} {GetClientWord(targetClients)}";
 
         // fade in
         yield return Fade(0f, 1f);

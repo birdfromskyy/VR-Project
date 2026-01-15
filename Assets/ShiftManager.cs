@@ -52,8 +52,9 @@ public class ShiftManager : MonoBehaviour
         new DaySettings{ day=3, targetCustomers=10, recipeIngredientsTotal=6, happyTime=25, neutralTime=25, angryTime=10, pattyCookTime=14, spawnInterval=13, ingredientSpawnInterval=9,  ingredientMaxAlive=5 },
     };
 
-    // Persist day across scene reload
+    // РЎРѕС…СЂР°РЅСЏРµРј РґРµРЅСЊ РјРµР¶РґСѓ РїРµСЂРµР·Р°РіСЂСѓР·РєР°РјРё СЃС†РµРЅС‹
     public static int StartDay = 1;
+
     [Header("Fire fail delay")]
     [SerializeField] private float fireFailDelay = 2f;
 
@@ -67,7 +68,6 @@ public class ShiftManager : MonoBehaviour
 
     private int smokeBeepsThisShift = 0;
 
-    // защита от двойного засчёта одного клиента
     private readonly HashSet<Customer> countedCustomers = new HashSet<Customer>();
 
     private void Awake()
@@ -79,7 +79,7 @@ public class ShiftManager : MonoBehaviour
     public void FailAfterCustomerDeath(Customer victim, string reason)
     {
         if (!gameObject.activeInHierarchy) return;
-        if (isTransitioning) return; // чтобы не запускалось несколько раз
+        if (isTransitioning) return; // РЈР¶Рµ РІ РїРµСЂРµС…РѕРґРµ, РЅРµ Р·Р°РїСѓСЃРєР°РµРј РїРѕРІС‚РѕСЂРЅРѕ
         StartCoroutine(FailAfterCustomerDeathRoutine(victim, reason));
     }
 
@@ -90,7 +90,7 @@ public class ShiftManager : MonoBehaviour
 
         customerManager?.SetSpawningEnabled(false);
 
-        // ждём, пока закончится анимация смерти
+        // Р–РґС‘Рј, РµСЃР»Рё РїСЂРѕРёРіСЂС‹РІР°РµРј РёР·-Р·Р° СЃРјРµСЂС‚Рё РєР»РёРµРЅС‚Р°
         if (victim != null)
             yield return victim.WaitForDeathAnimation();
 
@@ -99,10 +99,8 @@ public class ShiftManager : MonoBehaviour
         else
             yield return new WaitForSeconds(2f);
 
-        StartDay = 1;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
-        );
+        StartDay = currentShift;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void OnEnable()
@@ -111,7 +109,7 @@ public class ShiftManager : MonoBehaviour
 
         if (orderManager != null)
             orderManager.OnCustomerReactionFinished += OnCustomerReactionFinished;
-        
+
         if (customerManager != null)
             customerManager.OnCustomerGaveUpWaiting += OnCustomerGaveUpWaiting;
     }
@@ -121,7 +119,7 @@ public class ShiftManager : MonoBehaviour
         PattyCookable.OnSmokeAlarmBeepGlobal -= OnSmokeBeep;
 
         if (orderManager != null)
-            orderManager.OnCustomerReactionFinished += OnCustomerReactionFinished;
+            orderManager.OnCustomerReactionFinished -= OnCustomerReactionFinished;
 
         if (customerManager != null)
             customerManager.OnCustomerGaveUpWaiting -= OnCustomerGaveUpWaiting;
@@ -131,20 +129,20 @@ public class ShiftManager : MonoBehaviour
     {
         if (!shiftRunning || isTransitioning) return;
 
-        // чтобы не стартовало дважды
+        // РџРµСЂРµС…РѕРґРёРј РІ СЃРѕСЃС‚РѕСЏРЅРёРµ РїСЂРѕРёРіСЂС‹С€Р°
         isTransitioning = true;
 
-        StartCoroutine(GameOverAfterCustomerLeavesRoutine(customer, "Клиент ушёл не дождавшись заказа"));
+        StartCoroutine(GameOverAfterCustomerLeavesRoutine(customer, "РљР»РёРµРЅС‚ Р¶РґР°Р» СЃР»РёС€РєРѕРј РґРѕР»РіРѕ"));
     }
 
     private IEnumerator GameOverAfterCustomerLeavesRoutine(Customer leavingCustomer, string reason)
     {
         shiftRunning = false;
 
-        // стопаем новых клиентов
+        // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРїР°РІРЅ РєР»РёРµРЅС‚РѕРІ
         customerManager?.SetSpawningEnabled(false);
 
-        // ждём, пока этот конкретный клиент реально выйдет (Destroy -> ссылка станет null)
+        // Р–РґС‘Рј, РїРѕРєР° РѕР±СЉРµРєС‚ РєР»РёРµРЅС‚Р° РёСЃС‡РµР·РЅРµС‚ (Destroy -> СЃСЃС‹Р»РєР° СЃС‚Р°РЅРµС‚ null)
         float timeout = 12f;
         float t = 0f;
 
@@ -154,20 +152,19 @@ public class ShiftManager : MonoBehaviour
             yield return null;
         }
 
-        // показываем Game Over
+        // РџРѕРєР°Р·С‹РІР°РµРј Game Over
         if (gameOverScreen != null)
             yield return gameOverScreen.Play(reason);
         else
             yield return new WaitForSeconds(2f);
 
-        StartDay = 1;
+        StartDay = currentShift;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-
     private void Start()
     {
-        // защита от мусора в StartDay
+        // РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ StartDay РІ РґРѕРїСѓСЃС‚РёРјС‹С… РїСЂРµРґРµР»Р°С…
         if (StartDay < 1) StartDay = 1;
         if (StartDay > targetShifts) StartDay = 1;
 
@@ -180,7 +177,7 @@ public class ShiftManager : MonoBehaviour
         if (!shiftRunning || isTransitioning) return;
 
         if (shiftText != null)
-            shiftText.text = $"День {currentShift}/{targetShifts} • Цель: {clientsServedThisShift}/{currentTargetClients}";
+            shiftText.text = $"Р¦РµР»СЊ {currentShift}/{targetShifts} РЎРјРµРЅР°: {clientsServedThisShift}/{currentTargetClients}";
     }
 
     private DaySettings GetDay(int day)
@@ -195,14 +192,14 @@ public class ShiftManager : MonoBehaviour
     {
         DaySettings s = GetDay(currentShift);
 
-        // На время интро — не спавним клиентов
+        // РќР° СЃС‚Р°СЂС‚Рµ РЅРµ СЃРїР°РІРЅРёРј РєР»РёРµРЅС‚РѕРІ Рё РЅРµ РЅР°С‡РёРЅР°РµРј СЃРјРµРЅСѓ
         customerManager?.SetSpawningEnabled(false);
 
-        // Интро
+        // РРЅС‚СЂРѕ-СЌРєСЂР°РЅ СЃРјРµРЅС‹
         if (introScreen != null)
             yield return introScreen.Play(currentShift, s.targetCustomers);
 
-        // Применяем настройки дня
+        // РџСЂРёРјРµРЅСЏРµРј РЅР°СЃС‚СЂРѕР№РєРё РґРЅСЏ
         if (orderManager != null)
             orderManager.ApplyDaySettings(s.happyTime, s.neutralTime, s.angryTime, s.recipeIngredientsTotal);
 
@@ -213,11 +210,11 @@ public class ShiftManager : MonoBehaviour
 
         ApplyIngredientSpawners(s.ingredientSpawnInterval, s.ingredientMaxAlive);
 
-        // Запуск смены
+        // Р—Р°РїСѓСЃРє СЃРјРµРЅС‹
         StartShiftInternal(s.targetCustomers);
 
         if (statusText != null)
-            statusText.text = "Смена началась";
+            statusText.text = "РЎРјРµРЅР° РЅР°С‡Р°Р»Р°СЃСЊ";
     }
 
     private void StartShiftInternal(int targetClients)
@@ -258,32 +255,30 @@ public class ShiftManager : MonoBehaviour
     private IEnumerator FireGameOverRoutine()
     {
         if (statusText != null)
-            statusText.text = "ПОЖАР!";
+            statusText.text = "РџРѕР¶Р°СЂ!";
 
-        // ?? небольшая пауза, чтобы игрок понял, что произошло
+        // Р–РґС‘Рј 5 СЃРµРєСѓРЅРґ, С‡С‚РѕР±С‹ Р±С‹Р»Рѕ РІСЂРµРјСЏ СЃСЂРµР°РіРёСЂРѕРІР°С‚СЊ
         yield return new WaitForSeconds(5f);
 
         if (gameOverScreen != null)
-            yield return gameOverScreen.Play("Пожар!");
+            yield return gameOverScreen.Play("РџРѕР¶Р°СЂ!");
 
         StartDay = currentShift;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-
-
 
     private IEnumerator FailAfterEvacuationRoutine(string reason)
     {
         shiftRunning = false;
         isTransitioning = true;
 
-        // стопаем спавн
+        // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРїР°РІРЅ РєР»РёРµРЅС‚РѕРІ
         customerManager?.SetSpawningEnabled(false);
 
-        // фиксированная задержка перед Game Over
+        // Р–РґС‘Рј РїРµСЂРµРґ РїРѕРєР°Р·РѕРј Game Over
         yield return new WaitForSeconds(fireFailDelay);
 
-        // показываем Game Over
+        // РџРѕРєР°Р·С‹РІР°РµРј Game Over
         if (gameOverScreen != null)
             yield return gameOverScreen.Play(reason);
         else
@@ -293,28 +288,27 @@ public class ShiftManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-
     private void OnCustomerReactionFinished(Customer customer, CustomerMood mood)
     {
         if (!shiftRunning || isTransitioning) return;
 
-        // ? Game Over только после реакции
+        // Game Over С‚РѕР»СЊРєРѕ РїСЂРё Р·Р»РѕР№ СЂРµР°РєС†РёРё
         if (mood == CustomerMood.Angry)
         {
-            // "вечно злых" НЕ считаем причиной game over
+            // "Р’РµС‡РЅРѕ Р·Р»РѕР№" РЅРµ Р·Р°РІРµСЂС€Р°РµС‚ РёРіСЂСѓ
             if (customer == null || !customer.alwaysAngry)
             {
-                FailRun("Клиент недоволен");
+                FailRun("РљР»РёРµРЅС‚ РЅРµРґРѕРІРѕР»РµРЅ");
                 return;
             }
 
-            // но если alwaysAngry — можно засчитать как обслуженного, чтобы смена не зависала
+            // alwaysAngry СЃС‡РёС‚Р°РµРј РѕР±СЃР»СѓР¶РµРЅРЅС‹Рј Рё РїСЂРѕРґРѕР»Р¶Р°РµРј
             CountServedOnce(customer);
             TryFinishShift();
             return;
         }
 
-        // ? Happy/Neutral — обслужено
+        // Happy/Neutral: РїСЂРѕСЃС‚Рѕ Р·Р°СЃС‡РёС‚С‹РІР°РµРј
         if (customer != null)
             CountServedOnce(customer);
 
@@ -348,7 +342,7 @@ public class ShiftManager : MonoBehaviour
         else
             yield return new WaitForSeconds(1.5f);
 
-        // Финальная победа
+        // РџРѕСЃР»РµРґРЅСЏСЏ СЃРјРµРЅР°
         if (currentShift >= targetShifts)
         {
             if (winnerScreen != null)
@@ -359,7 +353,7 @@ public class ShiftManager : MonoBehaviour
             yield break;
         }
 
-        // Следующий день
+        // РЎР»РµРґСѓСЋС‰Р°СЏ СЃРјРµРЅР°
         StartDay = currentShift + 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }

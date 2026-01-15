@@ -15,8 +15,11 @@ public class WinnerScreen : MonoBehaviour
 
     public IEnumerator PlayShiftCleared(int shift, int targetShifts)
     {
-        if (titleText != null) titleText.text = "СМЕНА ПРОЙДЕНА!";
-        if (progressText != null) progressText.text = $"Прогресс: {shift} / {targetShifts}";
+        if (titleText != null)
+            titleText.text = "РЎРјРµРЅР° Р·Р°РІРµСЂС€РµРЅР°!";
+
+        if (progressText != null)
+            progressText.text = $"РџСЂРѕРіСЂРµСЃСЃ: {shift} / {targetShifts}";
 
         yield return Fade(0f, 1f);
         yield return new WaitForSeconds(visibleDuration);
@@ -25,8 +28,11 @@ public class WinnerScreen : MonoBehaviour
 
     public IEnumerator PlayFinalVictory()
     {
-        if (titleText != null) titleText.text = "ПОБЕДА!";
-        if (progressText != null) progressText.text = "Вы пережили все смены!";
+        if (titleText != null)
+            titleText.text = "РџРѕР±РµРґР°!";
+
+        if (progressText != null)
+            progressText.text = "Р’С‹ РїСЂРѕС€Р»Рё РІСЃРµ СЃРјРµРЅС‹!";
 
         yield return Fade(0f, 1f);
         yield return new WaitForSeconds(2.5f);

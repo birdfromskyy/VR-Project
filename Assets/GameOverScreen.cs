@@ -7,7 +7,7 @@ public class GameOverScreen : MonoBehaviour
     [Header("UI")]
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private TMP_Text titleText;
-    [SerializeField] private TMP_Text reasonText; // ìîæíî îñòàâèòü null
+    [SerializeField] private TMP_Text reasonText; // Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ null
 
     [Header("Timings")]
     [SerializeField] private float fadeDuration = 0.5f;
@@ -15,8 +15,13 @@ public class GameOverScreen : MonoBehaviour
 
     public IEnumerator Play(string reason)
     {
-        if (titleText != null) titleText.text = "ÈÃÐÀ ÎÊÎÍ×ÅÍÀ";
-        if (reasonText != null) reasonText.text = string.IsNullOrWhiteSpace(reason) ? "" : $"Ïðè÷èíà: {reason}";
+        if (titleText != null)
+            titleText.text = "Ð˜Ð³Ñ€Ð° Ð¾ÐºÐ¾Ð½Ñ‡ÐµÐ½Ð°";
+
+        if (reasonText != null)
+            reasonText.text = string.IsNullOrWhiteSpace(reason)
+                ? ""
+                : $"ÐŸÑ€Ð¸Ñ‡Ð¸Ð½Ð°: {reason}";
 
         yield return Fade(0f, 1f);
         yield return new WaitForSeconds(visibleDuration);
